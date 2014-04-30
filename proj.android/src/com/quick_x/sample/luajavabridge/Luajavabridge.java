@@ -44,21 +44,27 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.Button;
 import android.view.View; 
 import android.view.View.OnClickListener; 
+import android.widget.TextView;  
+import android.view.Gravity;
 
 public class Luajavabridge extends Cocos2dxActivity {
 	static private Luajavabridge s_instance;
     static private LinearLayout m_webLayout;
+    static private LinearLayout m_topLayout;
     static private WebView m_webView;
     static private Button m_backButton;
+    static private TextView m_titleView ;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		s_instance = this;
         //web layout 
-        m_webLayout = new LinearLayout(this);
+        m_webLayout = new LinearLayout(this);  
+        LinearLayout.LayoutParams lytp = new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT);  
+        s_instance.addContentView(m_webLayout, lytp); 
+
         m_webLayout.setOrientation(LinearLayout.VERTICAL);
-        s_instance.addContentView(m_webLayout, new LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT));
 	}
 
 	static {
@@ -120,22 +126,37 @@ public class Luajavabridge extends Cocos2dxActivity {
         s_instance.runOnUiThread(new Runnable() {
             public void run() {
                 m_webView = new WebView(s_instance);
-//初始化返回按钮
+
+                //初始化线性布局 里面加按钮和webView  
+                m_topLayout = new LinearLayout(s_instance);        
+                //m_topLayout.setOrientation(LinearLayout.VERTICAL);  
+
+                //初始化返回按钮
                 m_backButton = new Button(s_instance);
                 m_backButton.setBackgroundResource(R.drawable.backbutton);
                 m_backButton.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT));
                 m_backButton.setText("X");
                 //m_backButton.setTextColor(Color.argb(255, 255, 218, 154));
-                m_backButton.setTextSize(34);                
+                m_backButton.setTextSize(25);                
                 m_backButton.setOnClickListener(new OnClickListener() {                    
                     public void onClick(View v) {
                         removeWebView();
                     }
                 });
-                //把webView加入到线性布局
-                m_webLayout.addView(m_backButton);
 
-                m_webLayout.addView(m_webView);
+                m_titleView = new TextView(s_instance);
+                m_titleView.setGravity(Gravity.CENTER);
+                m_titleView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+                m_titleView.setText("hx2048 help");  
+                m_titleView.setTextSize(25);
+                m_titleView.setTextColor(0xff000000);
+                m_titleView.setBackgroundColor(0xffffffff);
+
+                m_topLayout.addView(m_backButton);
+                m_topLayout.addView(m_titleView);
+
+                m_webLayout.addView(m_topLayout);
+                m_webLayout.addView(m_webView); 
 
                 LinearLayout.LayoutParams linearParams = (LinearLayout.LayoutParams) m_webView.getLayoutParams();
 //可选的webview位置，x,y,width,height可任意填写，也可以做为函数参数传入。
@@ -178,10 +199,16 @@ public class Luajavabridge extends Cocos2dxActivity {
 //      Log.e("Vincent", "removeWebView");
         s_instance.runOnUiThread(new Runnable() {
             public void run() {
-                m_webLayout.removeView(m_webView);
-                m_webView.destroy();
-                m_webLayout.removeView(m_backButton);
+                m_topLayout.removeView(m_backButton);
                 m_backButton.destroyDrawingCache();
+
+                m_topLayout.removeView(m_titleView);
+                m_titleView.destroyDrawingCache();
+
+                m_webLayout.removeView(m_topLayout);
+
+                m_webLayout.removeView(m_webView); 
+                m_webView.destroy();
             }
         });
     }

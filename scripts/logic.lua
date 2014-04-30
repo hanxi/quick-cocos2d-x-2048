@@ -299,7 +299,7 @@ function initGrid(m,n)
             grid[i] = {}
         end
         for j=1,n do
-            grid[i][j] = 1024
+            grid[i][j] = 0
         end
     end
     randomNum(grid)
