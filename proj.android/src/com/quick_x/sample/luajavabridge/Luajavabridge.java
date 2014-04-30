@@ -150,7 +150,7 @@ public class Luajavabridge extends Cocos2dxActivity {
                 m_titleView.setText("hx2048 help");  
                 m_titleView.setTextSize(25);
                 m_titleView.setTextColor(0xff000000);
-                m_titleView.setBackgroundColor(0xffffffff);
+                m_titleView.setBackgroundColor(0xffede0c8);
 
                 m_topLayout.addView(m_backButton);
                 m_topLayout.addView(m_titleView);
