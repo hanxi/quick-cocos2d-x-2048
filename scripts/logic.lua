@@ -108,7 +108,7 @@ local function moveLeft(grid)
                 if grid[i][j+1]==2048 then
                     win = true
                 end
-                socre = score + grid[i][j+1]
+                score = score + grid[i][j+1]
                 for x=j,n-1 do
                     grid[i][x] = grid[i][x+1]
                 end
@@ -234,24 +234,6 @@ local function moveDown(grid)
     return score,win
 end
 
-local function canMove(grid)
-	local m = #grid
-	local n = #grid[1]
-    for i=1,m do
-        for j=1,n do
-            if grid[i][j]==0 then
-                return true
-            end
-            if (i<m and j<n)
-            and (grid[i][j]==grid[i][j+1]
-                or grid[i][j]==grid[i+1][j]) then
-                return true
-            end
-        end
-    end
-    return false
-end
-
 local function main()
     local grid = initGrid(4,4)
     randomNum(grid)
@@ -317,7 +299,7 @@ function initGrid(m,n)
             grid[i] = {}
         end
         for j=1,n do
-            grid[i][j] = 0
+            grid[i][j] = 1024
         end
     end
     randomNum(grid)
@@ -325,18 +307,31 @@ function initGrid(m,n)
     return grid
 end
 
-local function getScore(grid)
-    local m = #grid
-    local n = #grid[1]
-    local sore = 0
-    for i=1,m do
-        for j=1,n do
-            if beforeGrid[i][j]~=grid[i][j] then
-                table.insert(op_list,{'setnum',i,j,grid[i][j]})
+function serialize(t)
+    local mark={}
+    local assign={}
+    
+    local function ser_table(tbl,parent)
+        mark[tbl]=parent
+        local tmp={}
+        for k,v in pairs(tbl) do
+            local key= type(k)=="number" and "["..k.."]" or k
+            if type(v)=="table" then
+                local dotkey= parent..(type(k)=="number" and key or "."..key)
+                if mark[v] then
+                    table.insert(assign,dotkey.."="..mark[v])
+                else
+                    table.insert(tmp, key.."="..ser_table(v,dotkey))
+                end
+            else
+                table.insert(tmp, key.."="..v)
             end
         end
+        return "{"..table.concat(tmp,",").."}"
     end
-    return op_list
+ 
+    return ser_table(t,"ret")..table.concat(assign," ")
+    -- return "do local ret="..ser_table(t,"ret")..table.concat(assign," ").." return ret end"
 end
 
 local ops = {
@@ -345,7 +340,7 @@ local ops = {
     up = moveUp,
     down = moveDown,
 }
-local totalScore = 0
+totalScore = 0
 function touch_op(grid,op)
     local beforeGrid = copyGrid(grid)
     local score,win = ops[op](grid)
@@ -355,4 +350,22 @@ function touch_op(grid,op)
     local op_list = getOpList(beforeGrid,grid)
     return op_list,score,totalScore,win
 end
+function canMove(grid)
+	local m = #grid
+	local n = #grid[1]
+    for i=1,m do
+        for j=1,n do
+            if grid[i][j]==0 then
+                return true
+            end
+            if (i<m and j<n)
+            and (grid[i][j]==grid[i][j+1]
+                or grid[i][j]==grid[i+1][j]) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
 

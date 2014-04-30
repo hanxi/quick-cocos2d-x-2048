@@ -2,7 +2,15 @@ local MainScene = class("MainScene", function()
     return display.newScene("MainScene")
 end)
 
+bestScore = 0
+
 local function onTouch(event, x, y)
+    if isOver then
+        if event=='ended' then
+            showDialog("GAME OVER","YOUR SCORE "..totalScore,"New Game",function (event) restartGame() end)
+        end
+        return true
+    end
     if event=='began' then
         touchStart={x,y}
     elseif event=='ended' then
@@ -10,6 +18,11 @@ local function onTouch(event, x, y)
         if tx==0 then
             tx = tx+1
             ty = ty+1
+        end
+        local dis = tx*tx+ty*ty
+        print(dis)
+        if dis<3 then   -- 距离太小了就不触发
+            return true
         end
         local dt = ty/tx
         local op_list = nil
@@ -31,11 +44,18 @@ local function onTouch(event, x, y)
             end
         end
         doOpList(op_list)
-        print(string.format("score=%s,totalScore=%d",score,totalScore))
         if win then
             WINSTR = "YOUR ARE WINER"
         end
-        scoreLabel:setString(string.format("SCORE:%d    \n%s",totalScore,WINSTR or ""))
+        if totalScore>bestScore then
+            bestScore = totalScore
+        end
+        scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
+        isOver = not canMove(grid)
+        if isOver then
+            showDialog("GAME OVER","YOUR SCORE "..totalScore,"New Game",function (event) restartGame() end)
+        end
+        saveStatus()
     end
     return true
 end
@@ -59,33 +79,7 @@ function MainScene:createTitle(title)
         size = 44,
         color = display.COLOR_BLUE,
     })
-    scoreLabel:align(display.CENTER,display.cx,display.top - 100):addTo(self)
-end
-
-function MainScene:ctor()
-    grid = initGrid(4,4)
-
-    display.newColorLayer(ccc4(0xfa,0xf8,0xef, 255)):addTo(self)
-    self:createTouchLayer()
-    self:createNextButton()
-
-    self:createTitle("2048")
-end
-
-function MainScene:onEnter()
-    if device.platform ~= "android" then return end
-
-    -- avoid unmeant back
-    self:performWithDelay(function()
-        -- keypad layer, for android
-        local layer = display.newLayer()
-        layer:addKeypadEventListener(function(event)
-            if event == "back" then game.exit() end
-        end)
-        self:addChild(layer)
-
-        layer:setKeypadEnabled(true)
-    end, 0.5)
+    scoreLabel:align(display.CENTER,display.cx,display.top - 150):addTo(self)
 end
 
 function getPosFormIdx(mx,my)
@@ -186,8 +180,7 @@ function MainScene:createTouchLayer()
 
 end
 
-function MainScene:restartGame()
-    grid = initGrid(4,4)
+function reLoadGame()
     local m = #grid
     local n = #grid[1]
     for i=1,m do
@@ -195,9 +188,32 @@ function MainScene:restartGame()
             setnum(gridShow[i][j],grid[i][j])
         end
     end
+    scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
+end
+
+function restartGame()
+    grid = initGrid(4,4)
     totalScore = 0
     WINSTR = ""
-    scoreLabel:setString(string.format("SCORE:%d         \n",totalScore))
+    isOver = false
+    reLoadGame()
+end
+
+function MainScene:showHelpView()
+    if device.platform ~= "android" then return end
+
+    local x = 0 
+    local y = 0 
+    local w = display.widthInPixels
+    local h = display.heightInPixels
+    local javaClassName = "com.quick_x.sample.luajavabridge.Luajavabridge"
+    local javaMethodName = "displayWebView"
+    local javaParams = {
+        "file:///android_asset/html/help.html",
+        x,y,w,h,
+    }
+    local javaMethodSig = "(Ljava/lang/String;IIII)V"
+    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
 end
 
 function MainScene:createNextButton()
@@ -213,10 +229,112 @@ function MainScene:createNextButton()
             size = 32
         }))
         :onButtonClicked(function(event)
-            self:restartGame()
+            restartGame()
         end)
-        :align(display.RIGHT_BOTTOM, display.right - 20, display.bottom + 20)
+        :align(display.RIGHT_BOTTOM, display.right - 20, display.bottom + 150)
         :addTo(self)
+    cc.ui.UIPushButton.new(images, {scale9 = true})
+        :setButtonSize(240, 60)
+        :setButtonLabel("normal", ui.newTTFLabel({
+            text = "Help",
+            size = 32
+        }))
+        :onButtonClicked(function(event)
+            self:showHelpView()
+        end)
+        :align(display.RIGHT_BOTTOM, display.left + 260, display.bottom + 150)
+        :addTo(self)
+end
+
+function MainScene:ctor()
+    display.newColorLayer(ccc4(0xfa,0xf8,0xef, 255)):addTo(self)
+    grid = initGrid(4,4)
+    self:createTouchLayer()
+    self:createNextButton()
+
+    self:createTitle("2048")
+
+    local notificationCenter = CCNotificationCenter:sharedNotificationCenter()
+    notificationCenter:registerScriptObserver(nil, handler(self, self.onEnterForeground), "APP_ENTER_FOREGROUND_EVENT")
+    notificationCenter:registerScriptObserver(nil, handler(self, self.onEnterBackground), "APP_ENTER_BACKGROUND_EVENT")
+
+    loadStatus()
+    if isOver then
+        restartGame()
+    end
+
+end
+
+function MainScene:onEnter()
+    if device.platform ~= "android" then return end
+
+    -- avoid unmeant back
+    self:performWithDelay(function()
+        -- keypad layer, for android
+        local layer = display.newLayer()
+        layer:addKeypadEventListener(function(event)
+            if event == "back" then
+                game.exit()
+            end
+        end)
+        self:addChild(layer)
+
+        layer:setKeypadEnabled(true)
+    end, 0.5)
+end
+
+function showDialog(title,txt,btn,func)
+    if device.platform ~= "android" then return end
+
+    local javaClassName = "com.quick_x.sample.luajavabridge.Luajavabridge"
+    local javaMethodName = "showDialog"
+    local javaParams = {
+        title,
+        txt,
+        btn or "OK",
+        func or function(event)
+            printf("Java method callback value is [%s]", event)
+        end
+    }
+    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V"
+    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
+end
+
+local configFile = device.writablePath.."hxgame.config"
+function saveStatus()
+    local gridstr = serialize(grid)
+    local isOverstr = "false"
+    if isOver then isOverstr = "true" end
+    local str = string.format("do local grid,bestScore,totalScore,WINSTR,isOver=%s,%d,%d,\'%s\',%s return grid,bestScore,totalScore,WINSTR,isOver end",
+                                gridstr,bestScore,totalScore,WINSTR,isOverstr)
+    print(str)
+    io.writefile(configFile,str)
+end
+
+function loadStatus()
+    if io.exists(configFile) then
+        local str = io.readfile(configFile)
+        if str then
+            local f = loadstring(str)
+            local _grid,_bestScore,_totalScore,_WINSTR,_isOver = f()
+            print(_grid,_bestScore,_totalScore,_WINSTR,_isOver)
+            if _grid and _bestScore and _totalScore and _WINSTR then
+                grid,bestScore,totalScore,WINSTR,isOver = _grid,_bestScore,_totalScore,_WINSTR,_isOver
+            end
+            print (grid,bestScore,totalScore,WINSTR,isOver)
+        end
+    end
+    reLoadGame()
+end
+
+function MainScene:onEnterBackground()
+    print("MainScene:onEnterBackground")
+    saveStatus()
+end
+
+function MainScene:onEnterForeground()
+    print("MainScene:onEnterForeground")
+    loadStatus()
 end
 
 return MainScene

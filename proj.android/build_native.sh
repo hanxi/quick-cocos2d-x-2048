@@ -32,7 +32,8 @@ mkdir -p "$APP_ANDROID_ROOT"/bin
 chmod 755 "$APP_ANDROID_ROOT"/bin
 
 if [ -d "$APP_ANDROID_ROOT"/assets ]; then
-    rm -rf "$APP_ANDROID_ROOT"/assets/*
+    rm -rf "$APP_ANDROID_ROOT"/assets/res
+    rm -rf "$APP_ANDROID_ROOT"/assets/scripts
 fi
 mkdir -p "$APP_ANDROID_ROOT"/assets
 chmod 755 "$APP_ANDROID_ROOT"/assets
@@ -46,3 +47,5 @@ cp -rf "$APP_ROOT"/res "$APP_ANDROID_ROOT"/assets/
 echo "Using prebuilt externals"
 "$ANDROID_NDK_ROOT"/ndk-build $ANDROID_NDK_BUILD_FLAGS NDK_DEBUG=$NDK_DEBUG $NDK_BUILD_FLAGS -C "$APP_ANDROID_ROOT" $* \
 "NDK_MODULE_PATH=${QUICK_COCOS2DX_ROOT}:${COCOS2DX_ROOT}:${COCOS2DX_ROOT}/cocos2dx/platform/third_party/android/prebuilt"
+
+ant debug -Dsdk.dir=/Users/hrj/Documents/android/sdk
