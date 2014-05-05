@@ -21,7 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
  ****************************************************************************/
-package com.quick_x.sample.luajavabridge;
+package com.hx2048.luajavabridge;
 
 import org.cocos2dx.lib.Cocos2dxActivity;
 import org.cocos2dx.lib.Cocos2dxLuaJavaBridge;
@@ -46,6 +46,8 @@ import android.view.View;
 import android.view.View.OnClickListener; 
 import android.widget.TextView;  
 import android.view.Gravity;
+import android.content.Intent; 
+import android.net.Uri;
 
 public class Luajavabridge extends Cocos2dxActivity {
 	static private Luajavabridge s_instance;
@@ -97,15 +99,17 @@ public class Luajavabridge extends Cocos2dxActivity {
 	}
 
 	static public void showDialog(final String title,
-			final String message, final String btn, final int luaCallbackFunction) {
+			final String message, final String btn, final int luaCallbackFunction, final String btn2, final int luaCallbackFunction2) {
 		s_instance.runOnUiThread(new Runnable() {
 			@Override
 			public void run() {
-				AlertDialog alertDialog = new AlertDialog.Builder(s_instance).create();
-				alertDialog.setTitle(title);
-				alertDialog.setMessage(message);
-				alertDialog.setButton(btn, new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(s_instance);
+                builder.setCancelable(false); 
+                builder.setIcon(R.drawable.icon); 
+                builder.setTitle(title);
+                builder.setMessage(message);
+                builder.setPositiveButton(btn, new DialogInterface.OnClickListener() {  
+                    public void onClick(DialogInterface dialog, int which) {
 						s_instance.runOnGLThread(new Runnable() {
 							@Override
 							public void run() {
@@ -114,9 +118,21 @@ public class Luajavabridge extends Cocos2dxActivity {
 							}
 						});
 					}
-				});
-				alertDialog.setIcon(R.drawable.icon);
-				alertDialog.show();
+                }); 
+                if (btn2.length()!=0) {
+                    builder.setNegativeButton(btn2, new DialogInterface.OnClickListener() {  
+                        public void onClick(DialogInterface dialog, int which) {
+                            s_instance.runOnGLThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Cocos2dxLuaJavaBridge.callLuaFunctionWithString(luaCallbackFunction2, "CLICKED");
+                                    Cocos2dxLuaJavaBridge.releaseLuaFunction(luaCallbackFunction2);
+                                }
+                            });
+                        }
+                    }); 
+                }
+				builder.show();
 			}
 		});
 	}
@@ -213,38 +229,19 @@ public class Luajavabridge extends Cocos2dxActivity {
         });
     }
 
-    static public void save(final String fname, final String s) {
-        try {
-            FileOutputStream outStream=s_instance.openFileOutput(fname,0);
-            outStream.write(s.getBytes());
-            outStream.close();
-        } catch (FileNotFoundException e) {
-            return;
-        }
-        catch (IOException e){
-            return;
-        }
-    } 
-
-    static public String load(final String fname)
-    {
-        try {
-            FileInputStream inStream=s_instance.openFileInput(fname);
-            ByteArrayOutputStream stream=new ByteArrayOutputStream();
-            byte[] buffer=new byte[1024];
-            int length=-1;
-            while((length=inStream.read(buffer))!=-1)   {
-                stream.write(buffer,0,length);
-            }
-
-            stream.close();
-            inStream.close();
-            String s = stream.toString();
-            return s;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e){
-        }
-        return "";
-    } 
+    //分享到社交圈方法  
+    public static void share(final String title, final String txt) {  
+        s_instance.runOnUiThread(new Runnable() {
+             public void run() {  
+                 String filePath = "file:////data/data/" + s_instance.getApplicationInfo().packageName+ "/files/share.jpg";  
+                 Intent intent = new Intent("android.intent.action.SEND");    
+                 intent.setType("image/*");        
+                 intent.putExtra(Intent.EXTRA_SUBJECT, title);        
+                 intent.putExtra(Intent.EXTRA_TEXT, txt);  
+                 intent.putExtra(Intent.EXTRA_STREAM,Uri.parse(filePath));  
+                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);        
+                 s_instance.startActivity(Intent.createChooser(intent, "share"));   
+             }  
+         });  
+  }  
 }

@@ -4,10 +4,36 @@ end)
 
 bestScore = 0
 
+local function dialogFunc1(event)
+    restartGame()
+end
+
+local function dialogFunc2(event)
+    if device.platform ~= "android" then return end
+    game.mainScene:screen()
+end
+
+function showShareDialog()
+    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
+    local javaMethodName = "share"
+    local javaParams = {
+        "hx2048 share",
+        "this is my hx2048 score. you can do it. code source in here : https://github.com/hanxi/quick-cocos2d-x-2048",
+    }
+    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;)V"
+    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
+end
+
+local function showMyDialog(event)
+    showDialog("GAME OVER","YOUR SCORE "..totalScore,
+        "New Game", dialogFunc1,
+        "Share", dialogFunc2)
+end
+
 local function onTouch(event, x, y)
     if isOver then
         if event=='ended' then
-            showDialog("GAME OVER","YOUR SCORE "..totalScore,"New Game",function (event) restartGame() end)
+            showMyDialog(event)
         end
         return true
     end
@@ -53,7 +79,7 @@ local function onTouch(event, x, y)
         scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
         isOver = not canMove(grid)
         if isOver then
-            showDialog("GAME OVER","YOUR SCORE "..totalScore,"New Game",function (event) restartGame() end)
+            showMyDialog(event)
         end
         saveStatus()
     end
@@ -71,15 +97,15 @@ function doOpList(op_list)
 end
 
 function MainScene:createTitle(title)
-    cc.ui.UILabel.new({text = "*** " .. title .. " ***", size = 24, color = display.COLOR_BLACK})
+    cc.ui.UILabel.new({text = "== " .. title .. " ==", size = 20, color = display.COLOR_BLACK})
         :align(display.CENTER, display.cx, display.top - 20)
         :addTo(self)
     scoreLabel = cc.ui.UILabel.new({
         text = "SCORE:0",
-        size = 44,
+        size = 30,
         color = display.COLOR_BLUE,
     })
-    scoreLabel:align(display.CENTER,display.cx,display.top - 150):addTo(self)
+    scoreLabel:align(display.CENTER,display.cx,display.top - 100):addTo(self)
 end
 
 function getPosFormIdx(mx,my)
@@ -87,7 +113,7 @@ function getPosFormIdx(mx,my)
     local cdis = 2*cellsize-cellsize/2
     local origin = {x=display.cx-cdis,y=display.cy+cdis}
     local x = (my-1)*cellsize+origin.x
-    local y = -(mx-1)*cellsize+origin.y
+    local y = -(mx-1)*cellsize+origin.y - 150
     return x,y
 end
 function show(self,mx,my)
@@ -206,7 +232,7 @@ function MainScene:showHelpView()
     local y = 0 
     local w = display.widthInPixels
     local h = display.heightInPixels
-    local javaClassName = "com.quick_x.sample.luajavabridge.Luajavabridge"
+    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
     local javaMethodName = "displayWebView"
     local javaParams = {
         "file:///android_asset/html/help.html",
@@ -222,19 +248,9 @@ function MainScene:createNextButton()
         pressed = "GreenScale9Block.png",
         disabled = "GreenButton.png",
     }
+
     cc.ui.UIPushButton.new(images, {scale9 = true})
-        :setButtonSize(240, 60)
-        :setButtonLabel("normal", ui.newTTFLabel({
-            text = "New Game",
-            size = 32
-        }))
-        :onButtonClicked(function(event)
-            restartGame()
-        end)
-        :align(display.RIGHT_BOTTOM, display.right - 20, display.bottom + 150)
-        :addTo(self)
-    cc.ui.UIPushButton.new(images, {scale9 = true})
-        :setButtonSize(240, 60)
+        :setButtonSize(100, 60)
         :setButtonLabel("normal", ui.newTTFLabel({
             text = "Help",
             size = 32
@@ -242,21 +258,43 @@ function MainScene:createNextButton()
         :onButtonClicked(function(event)
             self:showHelpView()
         end)
-        :align(display.RIGHT_BOTTOM, display.left + 260, display.bottom + 150)
+        :align(display.LEFT_TOP, display.left + 20, display.top - 170)
         :addTo(self)
+
+    cc.ui.UIPushButton.new(images, {scale9 = true})
+        :setButtonSize(100, 60)
+        :setButtonLabel("normal", ui.newTTFLabel({
+            text = "Share",
+            size = 32
+        }))
+        :onButtonClicked(function(event)
+            dialogFunc2(event)
+        end)
+        :align(display.CENTER_TOP, display.left + 220, display.top - 170)
+        :addTo(self)
+
+    cc.ui.UIPushButton.new(images, {scale9 = true})
+        :setButtonSize(200, 60)
+        :setButtonLabel("normal", ui.newTTFLabel({
+            text = "New Game",
+            size = 32
+        }))
+        :onButtonClicked(function(event)
+            restartGame()
+        end)
+        :align(display.RIGHT_TOP, display.right - 20, display.top - 170)
+        :addTo(self)
+
 end
 
 function MainScene:ctor()
+    WINSTR = ""
     display.newColorLayer(ccc4(0xfa,0xf8,0xef, 255)):addTo(self)
     grid = initGrid(4,4)
     self:createTouchLayer()
     self:createNextButton()
 
     self:createTitle("2048")
-
-    local notificationCenter = CCNotificationCenter:sharedNotificationCenter()
-    notificationCenter:registerScriptObserver(nil, handler(self, self.onEnterForeground), "APP_ENTER_FOREGROUND_EVENT")
-    notificationCenter:registerScriptObserver(nil, handler(self, self.onEnterBackground), "APP_ENTER_BACKGROUND_EVENT")
 
     loadStatus()
     if isOver then
@@ -283,20 +321,24 @@ function MainScene:onEnter()
     end, 0.5)
 end
 
-function showDialog(title,txt,btn,func)
+function showDialog(title,txt,btn,func,btn2,func2)
     if device.platform ~= "android" then return end
 
-    local javaClassName = "com.quick_x.sample.luajavabridge.Luajavabridge"
+    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
     local javaMethodName = "showDialog"
     local javaParams = {
         title,
         txt,
-        btn or "OK",
+        btn or "ok",
         func or function(event)
             printf("Java method callback value is [%s]", event)
-        end
+        end,
+        btn2 or "",
+        func2 or function(event)
+            printf("Java method callback value is [%s]", event)
+        end,
     }
-    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V"
+    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;I)V"
     luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
 end
 
@@ -327,14 +369,40 @@ function loadStatus()
     reLoadGame()
 end
 
-function MainScene:onEnterBackground()
-    print("MainScene:onEnterBackground")
-    saveStatus()
-end
+--截屏代码 有一个咔嚓的动画
+function MainScene:screen()
+    local path = device.writablePath
+    local size = CCDirector:sharedDirector():getWinSize()
+    local screen = CCRenderTexture:create(size.width, size.height, 0)
+    local temp  = CCDirector:sharedDirector():getRunningScene()
+    screen:begin()
+    temp:visit()
+    screen:endToLua()
+    local pathsave = path.."share.jpg"
 
-function MainScene:onEnterForeground()
-    print("MainScene:onEnterForeground")
-    loadStatus()
+    if screen:saveToFile('share.jpg', 0) == true then
+        print(pathsave)
+    end
+    local colorLayer1 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
+    colorLayer1:setAnchorPoint(ccp(0, 0))
+    colorLayer1:setPosition(ccp(0, display.height))
+
+
+    local colorLayer2 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
+    colorLayer2:setAnchorPoint(ccp(0, 0))
+    colorLayer2:setPosition(ccp(0, - display.height))
+
+
+    transition.moveTo(colorLayer1, {y = display.cy, time = 0.5})
+    self:performWithDelay(function () 
+        transition.moveTo(colorLayer1, {y = display.height, time = 0.3})
+    end, 0.5) 
+
+
+    transition.moveTo(colorLayer2, {y = -display.cy, time = 0.5})
+    self:performWithDelay(function () 
+        transition.moveTo(colorLayer2, {y = -display.height, time = 0.3,onComplete = showShareDialog})
+    end, 0.5) 
 end
 
 return MainScene
