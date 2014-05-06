@@ -3,6 +3,7 @@ local MainScene = class("MainScene", function()
 end)
 
 bestScore = 0
+shareImgName = "share.png"
 
 local function dialogFunc1(event)
     restartGame()
@@ -10,7 +11,7 @@ end
 
 local function dialogFunc2(event)
     if device.platform ~= "android" then return end
-    game.mainScene:screen()
+    game.mainScene:screen(showShareDialog)
 end
 
 function showShareDialog()
@@ -19,8 +20,9 @@ function showShareDialog()
     local javaParams = {
         "hx2048 share",
         "this is my hx2048 score. you can do it. code source in here : https://github.com/hanxi/quick-cocos2d-x-2048",
+        shareImgName,
     }
-    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;)V"
+    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
     luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
 end
 
@@ -370,39 +372,36 @@ function loadStatus()
 end
 
 --截屏代码 有一个咔嚓的动画
-function MainScene:screen()
-    local path = device.writablePath
+function MainScene:screen(callbackfunc)
     local size = CCDirector:sharedDirector():getWinSize()
-    local screen = CCRenderTexture:create(size.width, size.height, 0)
-    local temp  = CCDirector:sharedDirector():getRunningScene()
+    local screen = CCRenderTexture:create(size.width, size.height, kCCTexture2DPixelFormat_RGBA8888)
     screen:begin()
-    temp:visit()
+    self:visit()
     screen:endToLua()
-    local pathsave = path.."share.jpg"
 
-    if screen:saveToFile('share.jpg', 0) == true then
-        print(pathsave)
-    end
+    screen:saveToFile(shareImgName,kCCImageFormatPNG)
+
     local colorLayer1 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
     colorLayer1:setAnchorPoint(ccp(0, 0))
     colorLayer1:setPosition(ccp(0, display.height))
-
 
     local colorLayer2 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
     colorLayer2:setAnchorPoint(ccp(0, 0))
     colorLayer2:setPosition(ccp(0, - display.height))
 
-
-    transition.moveTo(colorLayer1, {y = display.cy, time = 0.5})
+    transition.moveTo(colorLayer1, {y = display.cy, time = 0.5,})
     self:performWithDelay(function () 
         transition.moveTo(colorLayer1, {y = display.height, time = 0.3})
     end, 0.5) 
 
-
     transition.moveTo(colorLayer2, {y = -display.cy, time = 0.5})
     self:performWithDelay(function () 
-        transition.moveTo(colorLayer2, {y = -display.height, time = 0.3,onComplete = showShareDialog})
+        transition.moveTo(colorLayer2, {y = -display.height, time = 0.3})
     end, 0.5) 
+
+    self:performWithDelay(function () 
+        callbackfunc()
+    end, 0.9) 
 end
 
 return MainScene

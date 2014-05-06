@@ -6,5 +6,6 @@ function __G__TRACKBACK__(errorMessage)
     print("----------------------------------------")
 end
 
-require("game")
-game.startup()
+require "update"
+--require("game")
+--game.startup()

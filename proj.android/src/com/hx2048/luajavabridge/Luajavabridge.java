@@ -230,10 +230,10 @@ public class Luajavabridge extends Cocos2dxActivity {
     }
 
     //分享到社交圈方法  
-    public static void share(final String title, final String txt) {  
+    public static void share(final String title, final String txt, final String imgName) {  
         s_instance.runOnUiThread(new Runnable() {
              public void run() {  
-                 String filePath = "file:////data/data/" + s_instance.getApplicationInfo().packageName+ "/files/share.jpg";  
+                 String filePath = "file:////data/data/" + s_instance.getApplicationInfo().packageName+ "/files/"+imgName;  
                  Intent intent = new Intent("android.intent.action.SEND");    
                  intent.setType("image/*");        
                  intent.putExtra(Intent.EXTRA_SUBJECT, title);        
