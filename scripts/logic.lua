@@ -358,9 +358,8 @@ function canMove(grid)
             if grid[i][j]==0 then
                 return true
             end
-            if (i<m and j<n)
-            and (grid[i][j]==grid[i][j+1]
-                or grid[i][j]==grid[i+1][j]) then
+            if (i<m and grid[i][j]==grid[i+1][j] )
+                or (j<n and grid[i][j]==grid[i][j+1]) then
                 return true
             end
         end
