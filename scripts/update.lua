@@ -205,7 +205,7 @@ function UpdateScene:onEnter()
 	end
 	if self.fileList==nil then
 		self.fileList = {
-			ver = "1.0.0",
+			ver = "2.0.0",
 			stage = {},
 			remove = {},
 		}
