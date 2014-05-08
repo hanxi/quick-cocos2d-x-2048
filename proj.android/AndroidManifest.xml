@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hx2048.luajavabridge"
     android:versionCode="1"
-    android:versionName="1.0">
+    android:versionName="1.2">
 
     <uses-sdk android:minSdkVersion="8" />
 
@@ -10,8 +10,12 @@
         android:smallScreens="true"
         android:anyDensity="true"
         android:normalScreens="true"/>
-    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
     <application android:label="@string/app_name"
         android:allowBackup="true"
@@ -27,6 +31,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!--For AdsSdk.-->
+        <activity
+                android:name="com.wandoujia.ads.sdk.AppWallActivity"
+                android:launchMode="singleTop"
+                android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <activity
+                android:name="com.wandoujia.ads.sdk.AppWidgetContainerActivity"
+                android:theme="@android:style/Theme.Translucent.NoTitleBar"
+                android:launchMode="singleTop"
+                android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <service android:name="com.wandoujia.ads.sdk.DownloadService"/>
 
     </application>
 </manifest>

@@ -28,7 +28,7 @@ end
 
 local function showMyDialog(event)
     showDialog("GAME OVER","YOUR SCORE "..totalScore,
-        "New Game", dialogFunc1,
+        "Try Again", dialogFunc1,
         "Share", dialogFunc2)
 end
 
@@ -243,7 +243,7 @@ function MainScene:showHelpView()
     luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
 end
 
-function MainScene:createNextButton()
+function MainScene:createButtons()
     local images = {
         normal = "GreenButton.png",
         pressed = "GreenScale9Block.png",
@@ -275,13 +275,26 @@ function MainScene:createNextButton()
         :addTo(self)
 
     cc.ui.UIPushButton.new(images, {scale9 = true})
-        :setButtonSize(200, 60)
+        :setButtonSize(100, 60)
         :setButtonLabel("normal", ui.newTTFLabel({
-            text = "New Game",
+            text = "New",
             size = 32
         }))
         :onButtonClicked(function(event)
             restartGame()
+            self:showFullAds()
+        end)
+        :align(display.RIGHT_TOP, display.right - 180, display.top - 170)
+        :addTo(self)
+
+    cc.ui.UIPushButton.new(images, {scale9 = true})
+        :setButtonSize(100, 60)
+        :setButtonLabel("normal", ui.newTTFLabel({
+            text = "More",
+            size = 32
+        }))
+        :onButtonClicked(function(event)
+            self:showListAds()
         end)
         :align(display.RIGHT_TOP, display.right - 20, display.top - 170)
         :addTo(self)
@@ -289,11 +302,12 @@ function MainScene:createNextButton()
 end
 
 function MainScene:ctor()
+
     WINSTR = ""
     display.newColorLayer(ccc4(0xfa,0xf8,0xef, 255)):addTo(self)
     grid = initGrid(4,4)
     self:createTouchLayer()
-    self:createNextButton()
+    self:createButtons()
 
     self:createTitle("2048")
 
@@ -317,9 +331,27 @@ function MainScene:onEnter()
             end
         end)
         self:addChild(layer)
-
         layer:setKeypadEnabled(true)
-    end, 0.5)
+        self:showFullAds()
+      end, 0.5)
+end
+
+function MainScene:showFullAds()
+    self:performWithDelay(function()
+        local javaMethodName = "showFullAds"
+        local javaParams = {"079aa215250529a05350b937ab5d8302",}
+        local javaMethodSig = "(Ljava/lang/String;)V"
+        luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
+        end,0.1)
+end
+
+function MainScene:showListAds()
+    self:performWithDelay(function()
+        local javaMethodName = "showListAds"
+        local javaParams = {"2c2b1de82393306026f9b5577d2a7e0c"}
+        local javaMethodSig = "(Ljava/lang/String;)V"
+        luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
+        end,0.1)
 end
 
 function showDialog(title,txt,btn,func,btn2,func2)

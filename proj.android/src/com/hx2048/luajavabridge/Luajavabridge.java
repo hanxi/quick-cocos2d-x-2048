@@ -26,16 +26,15 @@ package com.hx2048.luajavabridge;
 import org.cocos2dx.lib.Cocos2dxActivity;
 import org.cocos2dx.lib.Cocos2dxLuaJavaBridge;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
-import android.os.Bundle;
-
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream; 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.os.Bundle;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -50,6 +49,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
 
+import com.wandoujia.ads.sdk.Ads;
+
 public class Luajavabridge extends Cocos2dxActivity {
 	static private Luajavabridge s_instance;
     static private LinearLayout m_webLayout;
@@ -57,6 +58,9 @@ public class Luajavabridge extends Cocos2dxActivity {
     static private WebView m_webView;
     static private Button m_backButton;
     static private TextView m_titleView ;
+
+    private static final String ADS_APP_ID = "100003701";
+    private static final String ADS_SECRET_KEY = "92830a88d5bcd85ad1d410e5fd534bad";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -66,8 +70,14 @@ public class Luajavabridge extends Cocos2dxActivity {
         m_webLayout = new LinearLayout(this);  
         LinearLayout.LayoutParams lytp = new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT,LayoutParams.FILL_PARENT);  
         s_instance.addContentView(m_webLayout, lytp); 
-
         m_webLayout.setOrientation(LinearLayout.VERTICAL);
+
+        try {
+            Ads.init(this, ADS_APP_ID, ADS_SECRET_KEY);
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 	}
 
 	static {
@@ -255,6 +265,23 @@ public class Luajavabridge extends Cocos2dxActivity {
                  intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);        
                  s_instance.startActivity(Intent.createChooser(intent, "share"));   
              }  
-         });  
-  }  
+        });  
+    }  
+
+    // 全屏广告
+    public static void showFullAds(final String id) {
+        s_instance.runOnUiThread(new Runnable() {
+             public void run() {  
+                  Ads.showAppWidget(s_instance, null, id, Ads.ShowMode.FULL_SCREEN);
+             }
+        });
+    }
+    // 展示应用列表
+    public static void showListAds(final String id) {
+        s_instance.runOnUiThread(new Runnable() {
+             public void run() {  
+                  Ads.showAppWall(s_instance,id);
+             }
+        });
+    }
 }
