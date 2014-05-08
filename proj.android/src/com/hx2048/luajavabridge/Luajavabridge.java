@@ -48,6 +48,7 @@ import android.widget.TextView;
 import android.view.Gravity;
 import android.content.Intent; 
 import android.net.Uri;
+import android.util.Log;
 
 public class Luajavabridge extends Cocos2dxActivity {
 	static private Luajavabridge s_instance;
@@ -225,6 +226,18 @@ public class Luajavabridge extends Cocos2dxActivity {
 
                 m_webLayout.removeView(m_webView); 
                 m_webView.destroy();
+            }
+        });
+    }
+
+    public static void chmod(final String fname, final String mod) {
+        s_instance.runOnUiThread(new Runnable() {
+             public void run() {  
+                try {
+                     Runtime.getRuntime().exec("chmod " + mod + " " + fname);    // 修改文件权限
+                 } catch (Exception e) {
+                     Log.e("error", "alert share.png permission");
+                 }
             }
         });
     }

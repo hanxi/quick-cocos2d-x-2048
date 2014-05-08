@@ -4,6 +4,7 @@ end)
 
 bestScore = 0
 shareImgName = "share.png"
+local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
 
 local function dialogFunc1(event)
     restartGame()
@@ -15,7 +16,6 @@ local function dialogFunc2(event)
 end
 
 function showShareDialog()
-    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
     local javaMethodName = "share"
     local javaParams = {
         "hx2048 share",
@@ -234,7 +234,6 @@ function MainScene:showHelpView()
     local y = 0 
     local w = display.widthInPixels
     local h = display.heightInPixels
-    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
     local javaMethodName = "displayWebView"
     local javaParams = {
         "file:///android_asset/html/help.html",
@@ -326,7 +325,6 @@ end
 function showDialog(title,txt,btn,func,btn2,func2)
     if device.platform ~= "android" then return end
 
-    local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
     local javaMethodName = "showDialog"
     local javaParams = {
         title,
@@ -378,8 +376,16 @@ function MainScene:screen(callbackfunc)
     screen:begin()
     self:visit()
     screen:endToLua()
-
     screen:saveToFile(shareImgName,kCCImageFormatPNG)
+
+    local fname = device.writablePath..shareImgName
+    local javaMethodName = "chmod"
+    local javaParams = {
+        fname,
+        "777",
+    }
+    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;)V"
+    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
 
     local colorLayer1 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
     colorLayer1:setAnchorPoint(ccp(0, 0))
