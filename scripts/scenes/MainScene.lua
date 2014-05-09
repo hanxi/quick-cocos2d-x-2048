@@ -30,53 +30,6 @@ local function doOpList(op_list)
     end
 end
 
-local function onTouch(event, x, y)
-    if isOver then
-        return true
-    end
-
-    if event=='began' then
-        touchStart={x,y}
-    elseif event=='ended' then
-        local tx,ty=x-touchStart[1],y-touchStart[2]
-        if tx==0 then
-            tx = tx+1
-            ty = ty+1
-        end
-        local dis = tx*tx+ty*ty
-        if dis<3 then   -- touch move too short will ignore
-            return true
-        end
-        local dt = ty/tx
-        local op_list,score,win
-        if dt>=-1 and dt<=1 then
-            if tx>0 then
-                op_list,score,win = touch_op(grid,'right')
-            else
-                op_list,score,win = touch_op(grid,'left')
-            end
-        else
-            if ty>0 then
-                op_list,score,win = touch_op(grid,'up')
-            else
-                op_list,score,win = touch_op(grid,'down')
-            end
-        end
-        doOpList(op_list)
-        if win then
-            WINSTR = "YOUR ARE WINER"
-        end
-        totalScore = totalScore + score
-        if totalScore>bestScore then
-            bestScore = totalScore
-        end
-        game.mainScene.scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
-        isOver = not canMove(grid)
-        saveStatus()
-    end
-    return true
-end
-
 function getPosFormIdx(mx,my)
     local cellsize=150   -- cell size
     local cdis = 2*cellsize-cellsize/2
@@ -179,10 +132,59 @@ function MainScene:createLabel(title)
     self.scoreLabel:align(display.CENTER,display.cx,display.top - 100):addTo(self)
 end
 
+function MainScene:onTouch(event, x, y)
+    if isOver then
+        return true
+    end
+
+    if event=='began' then
+        touchStart={x,y}
+    elseif event=='ended' then
+        local tx,ty=x-touchStart[1],y-touchStart[2]
+        if tx==0 then
+            tx = tx+1
+            ty = ty+1
+        end
+        local dis = tx*tx+ty*ty
+        if dis<3 then   -- touch move too short will ignore
+            return true
+        end
+        local dt = ty/tx
+        local op_list,score,win
+        if dt>=-1 and dt<=1 then
+            if tx>0 then
+                op_list,score,win = touch_op(grid,'right')
+            else
+                op_list,score,win = touch_op(grid,'left')
+            end
+        else
+            if ty>0 then
+                op_list,score,win = touch_op(grid,'up')
+            else
+                op_list,score,win = touch_op(grid,'down')
+            end
+        end
+        doOpList(op_list)
+        if win then
+            WINSTR = "YOUR ARE WINER"
+        end
+        totalScore = totalScore + score
+        if totalScore>bestScore then
+            bestScore = totalScore
+        end
+        self.scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
+        isOver = not canMove(grid)
+        saveStatus()
+    end
+    return true
+end
+
 function MainScene:createGridShow()
     local layer = display.newLayer()
-	layer:setTouchEnabled(true)
-    layer:registerScriptTouchHandler(onTouch)
+    layer:addTouchEventListener(function (event,x,y)
+        return self:onTouch(event,x,y)
+    end)
+    layer:setTouchEnabled(true)
     self:addChild(layer)
 
     gridShow = {}
@@ -190,7 +192,7 @@ function MainScene:createGridShow()
         local i,j = math.floor(tmp/4)+1,math.floor(tmp%4)+1
         local num = grid[i][j]
         local s = tostring(num)
---        s = s.."("..i..","..j..")"
+        --s = s.."("..i..","..j..")"
         if s=='0' then
             s=''
         end
@@ -218,7 +220,7 @@ function MainScene:reLoadGame()
     local n = #grid[1]
     for i=1,m do
         for j=1,n do
-            setnum(gridShow[i][j],grid[i][j])
+            setnum(gridShow[i][j],grid[i][j],i,j)
         end
     end
     self.scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))

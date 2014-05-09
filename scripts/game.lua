@@ -1,6 +1,5 @@
 require("config")
 require("framework.init")
-require("logic")
 
 -- define global module
 game = {}
