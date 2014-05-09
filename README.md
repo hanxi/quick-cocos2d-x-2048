@@ -71,6 +71,7 @@ gridShow和grid一样，是一个二维数组，不同的是grid的元素存放�
     ```
     $ sh run.sh 1.0.1
     ```
+
 #### mkflist生成
 update模块的作者用lua实现了一个，我感觉牵连的东西太多，就用python实现了。就是算出update.zip的md5然后用字符串拼一个flist出来。
 
