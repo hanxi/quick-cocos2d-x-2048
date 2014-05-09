@@ -1,94 +1,26 @@
+--[[=============================================================================
+#     FileName: MainScene.lua
+#         Desc: mainScene for 2048 game
+#               full edition in https://github.com/hanxi/quick-cocos2d-x-2048/tree/release
+#       Author: hanxi
+#        Email: hanxi.info@gmail.com
+#     HomePage: http://www.hanxi.info
+#      Version: 0.0.1
+#   LastChange: 2014-05-09 09:13:11
+#      History:
+=============================================================================]]
+
+local totalScore = 0
+local bestScore = 0
+local WINSTR = ""
+local touchStart={0,0}
+local configFile = device.writablePath.."hxgame.config"
+
 local MainScene = class("MainScene", function()
     return display.newScene("MainScene")
 end)
 
-bestScore = 0
-shareImgName = "share.png"
-local javaClassName = "com.hx2048.luajavabridge.Luajavabridge"
-
-local function dialogFunc1(event)
-    restartGame()
-end
-
-local function dialogFunc2(event)
-    if device.platform ~= "android" then return end
-    game.mainScene:screen(showShareDialog)
-end
-
-function showShareDialog()
-    local javaMethodName = "share"
-    local javaParams = {
-        "hx2048 share",
-        "this is my hx2048 score. you can do it. code source in here : https://github.com/hanxi/quick-cocos2d-x-2048",
-        shareImgName,
-    }
-    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
-    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
-end
-
-local function showMyDialog(event)
-    showDialog("GAME OVER","YOUR SCORE "..totalScore,
-        "New Game", dialogFunc1,
-        "Share", dialogFunc2)
-end
-
-local function onTouch(event, x, y)
-    if isOver then
-        if event=='ended' then
-            showMyDialog(event)
-        end
-        return true
-    end
-    if event=='began' then
-        touchStart={x,y}
-    elseif event=='ended' then
-        local tx,ty=x-touchStart[1],y-touchStart[2]
-        if tx==0 then
-            tx = tx+1
-            ty = ty+1
-        end
-        local dis = tx*tx+ty*ty
-        print(dis)
-        if dis<3 then   -- 距离太小了就不触发
-            return true
-        end
-        local dt = ty/tx
-        local op_list = nil
-        if dt>=-1 and dt<=1 then
-            if tx>0 then
-                print("right")
-                op_list,score,totalScore,win = touch_op(grid,'right')
-            else
-                print("left")
-                op_list,score,totalScore,win = touch_op(grid,'left')
-            end
-        else
-            if ty>0 then
-                print('up')
-                op_list,score,totalScore,win = touch_op(grid,'up')
-            else
-                print('down')
-                op_list,score,totalScore,win = touch_op(grid,'down')
-            end
-        end
-        doOpList(op_list)
-        if win then
-            WINSTR = "YOUR ARE WINER"
-        end
-        if totalScore>bestScore then
-            bestScore = totalScore
-        end
-        scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
-        isOver = not canMove(grid)
-        if isOver then
-            showMyDialog(event)
-        end
-        saveStatus()
-    end
-    return true
-end
-
-function doOpList(op_list)
+local function doOpList(op_list)
     for _,op in ipairs(op_list or {}) do
         local o = op[1]
         if o=='setnum' then
@@ -98,26 +30,62 @@ function doOpList(op_list)
     end
 end
 
-function MainScene:createTitle(title)
-    cc.ui.UILabel.new({text = "== " .. title .. " ==", size = 20, color = display.COLOR_BLACK})
-        :align(display.CENTER, display.cx, display.top - 20)
-        :addTo(self)
-    scoreLabel = cc.ui.UILabel.new({
-        text = "SCORE:0",
-        size = 30,
-        color = display.COLOR_BLUE,
-    })
-    scoreLabel:align(display.CENTER,display.cx,display.top - 100):addTo(self)
+local function onTouch(event, x, y)
+    if isOver then
+        return true
+    end
+
+    if event=='began' then
+        touchStart={x,y}
+    elseif event=='ended' then
+        local tx,ty=x-touchStart[1],y-touchStart[2]
+        if tx==0 then
+            tx = tx+1
+            ty = ty+1
+        end
+        local dis = tx*tx+ty*ty
+        if dis<3 then   -- touch move too short will ignore
+            return true
+        end
+        local dt = ty/tx
+        local op_list,score,win
+        if dt>=-1 and dt<=1 then
+            if tx>0 then
+                op_list,score,win = touch_op(grid,'right')
+            else
+                op_list,score,win = touch_op(grid,'left')
+            end
+        else
+            if ty>0 then
+                op_list,score,win = touch_op(grid,'up')
+            else
+                op_list,score,win = touch_op(grid,'down')
+            end
+        end
+        doOpList(op_list)
+        if win then
+            WINSTR = "YOUR ARE WINER"
+        end
+        totalScore = totalScore + score
+        if totalScore>bestScore then
+            bestScore = totalScore
+        end
+        game.mainScene.scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
+        isOver = not canMove(grid)
+        saveStatus()
+    end
+    return true
 end
 
 function getPosFormIdx(mx,my)
-    local cellsize=150   -- 格子的大小
+    local cellsize=150   -- cell size
     local cdis = 2*cellsize-cellsize/2
     local origin = {x=display.cx-cdis,y=display.cy+cdis}
     local x = (my-1)*cellsize+origin.x
-    local y = -(mx-1)*cellsize+origin.y - 150
+    local y = -(mx-1)*cellsize+origin.y - 100
     return x,y
 end
+
 function show(self,mx,my)
     local x,y = getPosFormIdx(mx,my)
     local bsz = self.backgroundsize/2
@@ -152,6 +120,7 @@ local numcolors = {
     [64] = ccc3(0x77,0x6e,0x65),
     [128] = ccc3(0x77,0x6e,0x65),
 }
+
 function setnum(self,num,i,j)
     local s = tostring(num)
     --s = s.."("..i..","..j..")"
@@ -174,7 +143,43 @@ function setnum(self,num,i,j)
     self.num:setColor(nc)
 end
 
-function MainScene:createTouchLayer()
+function saveStatus()
+    local gridstr = serialize(grid)
+    local isOverstr = "false"
+    if isOver then isOverstr = "true" end
+    local str = string.format("do local grid,bestScore,totalScore,WINSTR,isOver \
+                              =%s,%d,%d,\'%s\',%s return grid,bestScore,totalScore,WINSTR,isOver end",
+                              gridstr,bestScore,totalScore,WINSTR,isOverstr)
+    io.writefile(configFile,str)
+end
+
+function MainScene:loadStatus()
+    if io.exists(configFile) then
+        local str = io.readfile(configFile)
+        if str then
+            local f = loadstring(str)
+            local _grid,_bestScore,_totalScore,_WINSTR,_isOver = f()
+            if _grid and _bestScore and _totalScore and _WINSTR then
+                grid,bestScore,totalScore,WINSTR,isOver = _grid,_bestScore,_totalScore,_WINSTR,_isOver
+            end
+        end
+    end
+    self:reLoadGame()
+end
+
+function MainScene:createLabel(title)
+    cc.ui.UILabel.new({text = "== " .. title .. " ==", size = 20, color = display.COLOR_BLACK})
+        :align(display.CENTER, display.cx, display.top - 20)
+        :addTo(self)
+    self.scoreLabel = cc.ui.UILabel.new({
+        text = "SCORE:0",
+        size = 30,
+        color = display.COLOR_BLUE,
+    })
+    self.scoreLabel:align(display.CENTER,display.cx,display.top - 100):addTo(self)
+end
+
+function MainScene:createGridShow()
     local layer = display.newLayer()
 	layer:setTouchEnabled(true)
     layer:registerScriptTouchHandler(onTouch)
@@ -208,7 +213,7 @@ function MainScene:createTouchLayer()
 
 end
 
-function reLoadGame()
+function MainScene:reLoadGame()
     local m = #grid
     local n = #grid[1]
     for i=1,m do
@@ -216,64 +221,24 @@ function reLoadGame()
             setnum(gridShow[i][j],grid[i][j])
         end
     end
-    scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
+    self.scoreLabel:setString(string.format("BEST:%d     \nSCORE:%d    \n%s",bestScore,totalScore,WINSTR or ""))
 end
 
-function restartGame()
+function MainScene:restartGame()
     grid = initGrid(4,4)
     totalScore = 0
     WINSTR = ""
     isOver = false
-    reLoadGame()
+    self:reLoadGame()
+    saveStatus()
 end
 
-function MainScene:showHelpView()
-    if device.platform ~= "android" then return end
-
-    local x = 0 
-    local y = 0 
-    local w = display.widthInPixels
-    local h = display.heightInPixels
-    local javaMethodName = "displayWebView"
-    local javaParams = {
-        "file:///android_asset/html/help.html",
-        x,y,w,h,
-    }
-    local javaMethodSig = "(Ljava/lang/String;IIII)V"
-    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
-end
-
-function MainScene:createNextButton()
+function MainScene:createButtons()
     local images = {
         normal = "GreenButton.png",
         pressed = "GreenScale9Block.png",
         disabled = "GreenButton.png",
     }
-
-    cc.ui.UIPushButton.new(images, {scale9 = true})
-        :setButtonSize(100, 60)
-        :setButtonLabel("normal", ui.newTTFLabel({
-            text = "Help",
-            size = 32
-        }))
-        :onButtonClicked(function(event)
-            self:showHelpView()
-        end)
-        :align(display.LEFT_TOP, display.left + 20, display.top - 170)
-        :addTo(self)
-
-    cc.ui.UIPushButton.new(images, {scale9 = true})
-        :setButtonSize(100, 60)
-        :setButtonLabel("normal", ui.newTTFLabel({
-            text = "Share",
-            size = 32
-        }))
-        :onButtonClicked(function(event)
-            dialogFunc2(event)
-        end)
-        :align(display.CENTER_TOP, display.left + 220, display.top - 170)
-        :addTo(self)
-
     cc.ui.UIPushButton.new(images, {scale9 = true})
         :setButtonSize(200, 60)
         :setButtonLabel("normal", ui.newTTFLabel({
@@ -281,133 +246,25 @@ function MainScene:createNextButton()
             size = 32
         }))
         :onButtonClicked(function(event)
-            restartGame()
+            self:restartGame()
         end)
-        :align(display.RIGHT_TOP, display.right - 20, display.top - 170)
+        :align(display.CENTER_TOP, display.left+display.width/2, display.top - 170)
         :addTo(self)
-
 end
 
 function MainScene:ctor()
     WINSTR = ""
     display.newColorLayer(ccc4(0xfa,0xf8,0xef, 255)):addTo(self)
     grid = initGrid(4,4)
-    self:createTouchLayer()
-    self:createNextButton()
 
-    self:createTitle("2048")
+    self:createLabel("2048")
+    self:createGridShow()
+    self:createButtons()
 
-    loadStatus()
+    self:loadStatus()
     if isOver then
-        restartGame()
+        self:restartGame()
     end
-
-end
-
-function MainScene:onEnter()
-    if device.platform ~= "android" then return end
-
-    -- avoid unmeant back
-    self:performWithDelay(function()
-        -- keypad layer, for android
-        local layer = display.newLayer()
-        layer:addKeypadEventListener(function(event)
-            if event == "back" then
-                game.exit()
-            end
-        end)
-        self:addChild(layer)
-
-        layer:setKeypadEnabled(true)
-    end, 0.5)
-end
-
-function showDialog(title,txt,btn,func,btn2,func2)
-    if device.platform ~= "android" then return end
-
-    local javaMethodName = "showDialog"
-    local javaParams = {
-        title,
-        txt,
-        btn or "ok",
-        func or function(event)
-            printf("Java method callback value is [%s]", event)
-        end,
-        btn2 or "",
-        func2 or function(event)
-            printf("Java method callback value is [%s]", event)
-        end,
-    }
-    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;I)V"
-    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
-end
-
-local configFile = device.writablePath.."hxgame.config"
-function saveStatus()
-    local gridstr = serialize(grid)
-    local isOverstr = "false"
-    if isOver then isOverstr = "true" end
-    local str = string.format("do local grid,bestScore,totalScore,WINSTR,isOver=%s,%d,%d,\'%s\',%s return grid,bestScore,totalScore,WINSTR,isOver end",
-                                gridstr,bestScore,totalScore,WINSTR,isOverstr)
-    print(str)
-    io.writefile(configFile,str)
-end
-
-function loadStatus()
-    if io.exists(configFile) then
-        local str = io.readfile(configFile)
-        if str then
-            local f = loadstring(str)
-            local _grid,_bestScore,_totalScore,_WINSTR,_isOver = f()
-            print(_grid,_bestScore,_totalScore,_WINSTR,_isOver)
-            if _grid and _bestScore and _totalScore and _WINSTR then
-                grid,bestScore,totalScore,WINSTR,isOver = _grid,_bestScore,_totalScore,_WINSTR,_isOver
-            end
-            print (grid,bestScore,totalScore,WINSTR,isOver)
-        end
-    end
-    reLoadGame()
-end
-
---截屏代码 有一个咔嚓的动画
-function MainScene:screen(callbackfunc)
-    local size = CCDirector:sharedDirector():getWinSize()
-    local screen = CCRenderTexture:create(size.width, size.height, kCCTexture2DPixelFormat_RGBA8888)
-    screen:begin()
-    self:visit()
-    screen:endToLua()
-    screen:saveToFile(shareImgName,kCCImageFormatPNG)
-
-    local fname = device.writablePath..shareImgName
-    local javaMethodName = "chmod"
-    local javaParams = {
-        fname,
-        "777",
-    }
-    local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;)V"
-    luaj.callStaticMethod(javaClassName, javaMethodName, javaParams, javaMethodSig)
-
-    local colorLayer1 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
-    colorLayer1:setAnchorPoint(ccp(0, 0))
-    colorLayer1:setPosition(ccp(0, display.height))
-
-    local colorLayer2 = display.newColorLayer(ccc4(0, 0, 0, 125)):addTo(self)
-    colorLayer2:setAnchorPoint(ccp(0, 0))
-    colorLayer2:setPosition(ccp(0, - display.height))
-
-    transition.moveTo(colorLayer1, {y = display.cy, time = 0.5,})
-    self:performWithDelay(function () 
-        transition.moveTo(colorLayer1, {y = display.height, time = 0.3})
-    end, 0.5) 
-
-    transition.moveTo(colorLayer2, {y = -display.cy, time = 0.5})
-    self:performWithDelay(function () 
-        transition.moveTo(colorLayer2, {y = -display.height, time = 0.3})
-    end, 0.5) 
-
-    self:performWithDelay(function () 
-        callbackfunc()
-    end, 0.9) 
 end
 
 return MainScene

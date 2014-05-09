@@ -17,6 +17,7 @@ local UpdateScene = class("UpdateScene", function()
     return display.newScene("UpdateScene")
 end)
 
+local NEEDUPDATE = false
 --local server = "https://raw.githubusercontent.com/hanxi/quick-cocos2d-x-2048/release/"
 local server = "http://192.168.16.13:8080/"
 local param = "?dev="..device.platform
@@ -274,9 +275,12 @@ function UpdateScene:requestFromServer(filename, waittime)
     local url = server..filename..param
     self.requestCount = self.requestCount + 1
     local index = self.requestCount
-    local request = network.createHTTPRequest(function(event)
-        self:onResponse(event, index)
-    end, url, "GET")
+    local request = nil
+    if NEEDUPDATE then
+        request = network.createHTTPRequest(function(event)
+            self:onResponse(event, index)
+        end, url, "GET")
+    end
     if request then
         request:setTimeout(waittime or 30)
         request:start()

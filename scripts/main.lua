@@ -7,5 +7,3 @@ function __G__TRACKBACK__(errorMessage)
 end
 
 require "update"
---require("game")
---game.startup()

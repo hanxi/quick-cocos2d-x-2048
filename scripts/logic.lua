@@ -1,9 +1,23 @@
+--[[=============================================================================
+#     FileName: logic.lua
+#         Desc: the logic for 2048. you can run it on you console by lua
+#               full edition in https://github.com/hanxi/quick-cocos2d-x-2048/tree/release
+#       Author: hanxi
+#        Email: hanxi.info@gmail.com
+#     HomePage: http://www.hanxi.info
+#      Version: 0.0.1
+#   LastChange: 2014-05-09 09:16:26
+#      History:
+=============================================================================]]
+
+math.randomseed(os.time())
 local function printGrid(grid)
-    local celllen = 8  -- 每个格子占用字符数
+    local celllen = 8  -- one cell have character count
     local gridStrLines = {}
-    table.insert(gridStrLines,"-------------------------------------")
+    table.insert(gridStrLines,"\n-------------------------------------")
     for i,row in ipairs(grid) do
         local line = {} 
+        -- format the number in the center of the cell
         for _,num in ipairs(row) do
             if num==0 then
                 local pres = ""
@@ -37,18 +51,6 @@ local function printGrid(grid)
     end
     local gridStr = table.concat(gridStrLines,"\n")
     print(gridStr)
-end
-
-local function randomGrid(grid)
-    local m = #grid
-    local n = #grid[1]
-    for i=1,m do
-        for j=1,n do
-            local r = math.random(1,5)
-            local num = 2^r
-            grid[i][j] = num
-        end
-    end
 end
 
 local function getRandomZeroPos(grid)
@@ -234,35 +236,6 @@ local function moveDown(grid)
     return score,win
 end
 
-local function main()
-    local grid = initGrid(4,4)
-    randomNum(grid)
-    printGrid(grid)
-    io.write("next step 'a'[←],'w'[↑],'s'[↓],'d'[→],'q'[exit] >> ")
-    local input = io.read()
-    while input~="q" do
-        if input=="a" or input=="w" or input=="s" or input=="d" then
-            if input=="a" then
-                moveLeft(grid)
-            elseif input=="w" then
-                moveUp(grid)
-            elseif input=="s" then
-                moveDown(grid)
-            elseif input=="d" then
-                moveRight(grid)
-            end
-            randomNum(grid)
-            printGrid(grid)
-        else
-            print("error input. please input 'a'[←] or 'w'[↑] or 's'[↓] or 'd'[→] or 'q'[exit]")
-        end
-        io.write("next step 'a'[←],'w'[↑],'s'[↓],'d'[→],'q'[exit] >> ")
-        input = io.read()
-    end
-end
-
--- main()
-
 local function copyGrid(grid)
     local m = #grid
     local n = #grid[1]
@@ -292,21 +265,7 @@ local function getOpList(beforeGrid,grid)
     return op_list
 end
 
-function initGrid(m,n)
-    local grid = {}
-    for i=1,m do
-        if not grid[i] then
-            grid[i] = {}
-        end
-        for j=1,n do
-            grid[i][j] = 0
-        end
-    end
-    randomNum(grid)
-    randomNum(grid)
-    return grid
-end
-
+-- serialize lua table. for save lua table in file
 function serialize(t)
     local mark={}
     local assign={}
@@ -331,25 +290,23 @@ function serialize(t)
     end
  
     return ser_table(t,"ret")..table.concat(assign," ")
-    -- return "do local ret="..ser_table(t,"ret")..table.concat(assign," ").." return ret end"
 end
 
-local ops = {
-    left = moveLeft,
-    right = moveRight,
-    up = moveUp,
-    down = moveDown,
-}
-totalScore = 0
-function touch_op(grid,op)
-    local beforeGrid = copyGrid(grid)
-    local score,win = ops[op](grid)
-    totalScore = totalScore + score
+function initGrid(m,n)
+    local grid = {}
+    for i=1,m do
+        if not grid[i] then
+            grid[i] = {}
+        end
+        for j=1,n do
+            grid[i][j] = 0
+        end
+    end
     randomNum(grid)
-    printGrid(grid)
-    local op_list = getOpList(beforeGrid,grid)
-    return op_list,score,totalScore,win
+    randomNum(grid)
+    return grid
 end
+
 function canMove(grid)
 	local m = #grid
 	local n = #grid[1]
@@ -367,4 +324,51 @@ function canMove(grid)
     return false
 end
 
+local ops = {
+    left  = moveLeft,
+    right = moveRight,
+    up    = moveUp,
+    down  = moveDown,
+}
+function touch_op(grid,op)
+    local beforeGrid = copyGrid(grid)
+    local score,win = ops[op](grid)
+    randomNum(grid)
+    printGrid(grid)
+    local op_list = getOpList(beforeGrid,grid)
+    return op_list,score,win
+end
+
+-------------------------------------------------------------------------------
+-- for lua console 2048
+-------------------------------------------------------------------------------
+local function main()
+    local grid = initGrid(4,4)
+    randomNum(grid)
+    printGrid(grid)
+    io.write("next step 'a'[←],'w'[↑],'s'[↓],'d'[→],'q'[exit] >> ")
+    local input = io.read()
+    while input~="q" do
+        if input=="a" or input=="w" or input=="s" or input=="d" then
+            if input=="a" then
+                moveLeft(grid)
+            elseif input=="w" then
+                moveUp(grid)
+            elseif input=="s" then
+                moveDown(grid)
+            elseif input=="d" then
+                moveRight(grid)
+            end
+            randomNum(grid)
+            printGrid(grid)
+        else
+            print("error input. please input 'a'[←] or 'w'[↑] or 's'[↓] or 'd'[→] or 'q'[exit]")
+        end
+        io.write("next step 'a'[←],'w'[↑],'s'[↓],'d'[→],'q'[exit] >> ")
+        input = io.read()
+    end
+end
+
+-- uncomment this. you can in console run command to play console 2048. "$ lua logic.lua"
+-- main()
 
