@@ -39,12 +39,12 @@ function getPosFormIdx(mx,my)
     return x,y
 end
 
-function show(self,mx,my)
+function MainScene:show(cell,mx,my)
     local x,y = getPosFormIdx(mx,my)
-    local bsz = self.backgroundsize/2
-    self.background:setPosition(ccp(x-bsz,y-bsz))
-    self.layer:addChild(self.background)
-    self.num:align(display.CENTER,x,y):addTo(self.layer)
+    local bsz = cell.backgroundsize/2
+    cell.background:setPosition(ccp(x-bsz,y-bsz))
+    self:addChild(cell.background)
+    cell.num:align(display.CENTER,x,y):addTo(self)
 end
 
 local colors = {
@@ -180,13 +180,6 @@ function MainScene:onTouch(event, x, y)
 end
 
 function MainScene:createGridShow()
-    local layer = display.newLayer()
-    layer:addTouchEventListener(function (event,x,y)
-        return self:onTouch(event,x,y)
-    end)
-    layer:setTouchEnabled(true)
-    self:addChild(layer)
-
     gridShow = {}
     for tmp=0,15 do
         local i,j = math.floor(tmp/4)+1,math.floor(tmp%4)+1
@@ -207,10 +200,9 @@ function MainScene:createGridShow()
                 size = 40,
                 color = numcolors[0],
             }),
-            layer = layer,
         }
         gridShow[i][j] = cell
-        show(gridShow[i][j],i,j)
+        self:show(gridShow[i][j],i,j)
     end
 
 end
@@ -267,6 +259,15 @@ function MainScene:ctor()
     if isOver then
         self:restartGame()
     end
+end
+
+function MainScene:onEnter()
+    local layer = display.newLayer()
+    layer:addTouchEventListener(function (event,x,y)
+        return self:onTouch(event,x,y)
+    end)
+    layer:setTouchEnabled(true)
+    self:addChild(layer)
 end
 
 return MainScene
