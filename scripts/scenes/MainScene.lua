@@ -298,9 +298,6 @@ function MainScene:showHelpView()
 end
 
 function MainScene:showFullAds()
-    if network.getInternetConnectionStatus()==kCCNetworkStatusNotReachable then
-        return
-    end
     self:performWithDelay(function()
         local javaMethodName = "showFullAds"
         local javaParams = {"079aa215250529a05350b937ab5d8302",}

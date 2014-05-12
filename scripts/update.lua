@@ -255,7 +255,6 @@ function UpdateScene:endProcess()
                 if checkOK then
                     for i,v in ipairs(self.fileList.stage) do
                         if v.act=="load" then
-                            print("hanxi==",self.path..v.name)
                             CCLuaLoadChunksFromZIP(self.path..v.name)
                         end
                     end

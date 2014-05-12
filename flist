@@ -1,7 +1,7 @@
 local list = {
-	ver = "2.0.2",
+	ver = "2.0.3",
 	stage = {
-		{name="update.zip", code="b4e4d313cdd0fe4bb7777e8023438258", act="load"},
+		{name="update.zip", code="ce87508f3f351abd88187db4a362f8cb", act="load"},
 	},
 	remove={
 	},
