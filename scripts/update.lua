@@ -17,8 +17,8 @@ local UpdateScene = class("UpdateScene", function()
     return display.newScene("UpdateScene")
 end)
 
---local server = "https://raw.githubusercontent.com/hanxi/quick-cocos2d-x-2048/release2.0/"
-local server = "http://192.168.16.10:8080/"
+local server = "https://raw.githubusercontent.com/hanxi/quick-cocos2d-x-2048/release2.0/"
+--local server = "http://192.168.16.10:8080/"
 local param = "?dev="..device.platform
 local list_filename = "flist"
 local downList = {}
