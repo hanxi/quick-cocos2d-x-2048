@@ -51,5 +51,6 @@ echo "Using prebuilt externals"
 cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/armeabi/* libs/armeabi/
 cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/armeabi-v7a/* libs/armeabi-v7a/
 cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/x86/* libs/x86/
+cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/*.jar libs/
 cp -rf /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/res/layout res/
 ant release -Dsdk.dir=/Users/hrj/Documents/android/sdk
