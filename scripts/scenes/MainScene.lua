@@ -38,7 +38,7 @@ function showShareDialog()
     local javaMethodName = "share"
     local javaParams = {
         "hx2048 share",
-        "this is my hx2048 score. you can do it. code source in here : https://github.com/hanxi/quick-cocos2d-x-2048",
+        string.format("my hx2048 score is %d. from wandoujia download : http://apps.wandoujia.com/apps/com.hx2048.luajavabridge/download ",totalScore),
         shareImgName,
     }
     local javaMethodSig = "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V"
