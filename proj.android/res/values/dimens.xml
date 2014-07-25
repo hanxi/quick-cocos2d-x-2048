@@ -1,7 +1,0 @@
-<resources>
-    <dimen name="screenshot_width">108dip</dimen>
-    <dimen name="screenshot_height">170dip</dimen>
-
-    <dimen name="wallpaper_divider_width">1dp</dimen>
-
-    </resources>

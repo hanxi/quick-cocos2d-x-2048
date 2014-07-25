@@ -48,9 +48,9 @@ echo "Using prebuilt externals"
 "$ANDROID_NDK_ROOT"/ndk-build $ANDROID_NDK_BUILD_FLAGS NDK_DEBUG=$NDK_DEBUG $NDK_BUILD_FLAGS -C "$APP_ANDROID_ROOT" $* \
 "NDK_MODULE_PATH=${QUICK_COCOS2DX_ROOT}:${COCOS2DX_ROOT}:${COCOS2DX_ROOT}/cocos2dx/platform/third_party/android/prebuilt"
 
-cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/armeabi/* libs/armeabi/
-cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/armeabi-v7a/* libs/armeabi-v7a/
-cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/x86/* libs/x86/
-cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/libs/*.jar libs/
-cp -rf /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.1_140430/res/layout res/
+cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.3.1/libs/armeabi/* libs/armeabi/
+cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.3.1/libs/armeabi-v7a/* libs/armeabi-v7a/
+cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.3.1/libs/x86/* libs/x86/
+cp /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.3.1/libs/*.jar libs/
+cp -rf /Users/hrj/Downloads/WandoujiaAdNetworkSDK_V1.3.1/res/layout res/
 ant release -Dsdk.dir=/Users/hrj/Documents/android/sdk

@@ -5,7 +5,7 @@
              android:layout_height="match_parent"
              android:background="#f4f4f4">
 
-    <TextView
+    <!--<TextView
             android:id="@+id/empty_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -13,13 +13,19 @@
             android:text="@string/no_result_text"
             android:textColor="@color/wandou_ads_green_normal"
             android:textSize="18sp"
-            android:drawableTop="@drawable/wdj_ads_empty_background"/>
+            android:drawableTop="@drawable/wdj_ads_empty_background"/>-->
+
+    <ProgressBar
+            android:id="@+id/empty_view"
+            android:layout_gravity="center"
+            style="@style/GenericProgressIndicator"/>
 
     <ListView xmlns:android="http://schemas.android.com/apk/res/android"
               android:id="@+id/wdj_apps_list"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:divider="@null"
-              android:listSelector="@android:color/transparent"/>
+              android:listSelector="@android:color/transparent"
+              android:cacheColorHint="@android:color/transparent"/>
 </FrameLayout>
 

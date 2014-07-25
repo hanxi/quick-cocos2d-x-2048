@@ -4,9 +4,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:descendantFocusability="blocksDescendants"
+                android:paddingBottom="10dip"
         android:background="@drawable/wdj_ads_card_background_normal">
 
-    <com.android.volley.toolbox.NetworkImageView
+    <com.wandoujia.ads.sdk.volley.toolbox.NetworkImageView
             android:id="@+id/icon"
             android:layout_width="60dip"
             android:layout_height="60dip"
@@ -24,7 +25,7 @@
             android:layout_height="30dip"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:layout_marginTop="12dip"
+            android:layout_marginTop="18dip"
             android:layout_marginLeft="15dip"
             android:layout_marginRight="15dip"
             android:background="@drawable/wdj_ads_action_button_background"

@@ -33,6 +33,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.webkit.WebSettings;
@@ -41,6 +42,7 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.view.View; 
 import android.view.View.OnClickListener; 
 import android.widget.TextView;  
@@ -50,6 +52,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.wandoujia.ads.sdk.Ads;
+import com.wandoujia.ads.sdk.loader.Fetcher;
 
 public class Luajavabridge extends Cocos2dxActivity {
 	static private Luajavabridge s_instance;
@@ -271,11 +274,28 @@ public class Luajavabridge extends Cocos2dxActivity {
     // 全屏广告
     public static void showFullAds(final String id) {
         s_instance.runOnUiThread(new Runnable() {
-             public void run() {  
-                  Ads.showAppWidget(s_instance, null, id, Ads.ShowMode.FULL_SCREEN);
-             }
+            public void run() {
+                final Dialog dialog = new Dialog(s_instance,R.style.NoBoundDialog);
+                LinearLayout layout = new LinearLayout(s_instance);
+                layout.setOrientation(LinearLayout.VERTICAL);
+
+                View adsView = Ads.showAppWidget(s_instance, null, id, Ads.ShowMode.WIDGET);
+
+                ImageButton btn = (ImageButton)adsView.findViewById(R.id.app_widget_close_button);
+                btn.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        dialog.dismiss();
+                    }
+                });
+                layout.addView(adsView);
+                LayoutParams lytp = new LayoutParams(LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
+                dialog.setContentView(layout,lytp);
+                dialog.show();
+            }
         });
-    }
+    } 
+    
     // 展示应用列表
     public static void showListAds(final String id) {
         s_instance.runOnUiThread(new Runnable() {

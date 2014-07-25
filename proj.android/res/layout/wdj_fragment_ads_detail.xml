@@ -50,7 +50,7 @@
             <RelativeLayout android:layout_width="match_parent"
                             android:layout_height="wrap_content">
 
-                <com.android.volley.toolbox.NetworkImageView
+                <com.wandoujia.ads.sdk.volley.toolbox.NetworkImageView
                         android:id="@+id/app_detail_icon"
                         android:layout_width="80dip"
                         android:layout_height="80dip"
